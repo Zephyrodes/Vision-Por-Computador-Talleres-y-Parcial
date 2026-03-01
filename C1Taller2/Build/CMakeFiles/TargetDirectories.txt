@@ -1,0 +1,3 @@
+/home/lab/Documents/CreacionesPrimerCorte/C1Taller2/Build/CMakeFiles/rebuild_cache.dir
+/home/lab/Documents/CreacionesPrimerCorte/C1Taller2/Build/CMakeFiles/C1Taller2.dir
+/home/lab/Documents/CreacionesPrimerCorte/C1Taller2/Build/CMakeFiles/edit_cache.dir
