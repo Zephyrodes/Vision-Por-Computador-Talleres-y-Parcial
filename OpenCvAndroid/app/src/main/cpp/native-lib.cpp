@@ -28,7 +28,7 @@ Java_com_example_opencvandroid_MainActivity_procesarFrame(
         cvtColor(edges, frame, COLOR_GRAY2RGBA);
     }
     else if (effectId == 3) {
-        // Efecto 3: Mapa de Calor (Térmico) - Inusual y muy visual
+        // Efecto 3: Mapa de Calor (Térmico)
         Mat gray, thermal;
         // 1. Convertir a Gris (intensidad de luz)
         cvtColor(frame, gray, COLOR_RGBA2GRAY);
