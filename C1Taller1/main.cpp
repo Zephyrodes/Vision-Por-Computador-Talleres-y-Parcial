@@ -8,7 +8,7 @@ using namespace cv;
 using namespace std;
 
 // =========================
-// FUNCION: Dibuja bounding box y centro de masa dado una imagen y su mascara
+// FUNCION: Dibuja bounding box y centro de masa
 // =========================
 Mat dibujarBoundingBox(const Mat& imagen, const vector<vector<Point>>& contornos, int idxMayor)
 {
@@ -26,8 +26,7 @@ Mat dibujarBoundingBox(const Mat& imagen, const vector<vector<Point>>& contornos
 
         circle(resultado, Point(cx, cy), 5, Scalar(0, 0, 255), -1);
 
-        cout << "Centro de masa (" << resultado.cols << "x" << resultado.rows << "): "
-             << "(" << cx << ", " << cy << ")" << endl;
+        cout << "Centro de masa: (" << cx << ", " << cy << ")" << endl;
     }
 
     return resultado;
@@ -105,7 +104,7 @@ int main()
     imshow("Ejercicio 2", resultadoEj2);
 
     // =========================
-    // CARGA Y MASCARA (compartida entre ejercicio 3 y 4)
+    // CARGA DE IMAGENES
     // =========================
 
     Mat imgA = imread("../Data/imA.bmp", IMREAD_GRAYSCALE);
@@ -117,35 +116,59 @@ int main()
         return -1;
     }
 
-    // Diferencia, binarizado y limpieza de ruido
+    // =========================
+    // EJERCICIO 3 - Silueta brillante (diff) sobre fondo negro
+    // =========================
+
     Mat diff, binaria;
     absdiff(imgA, imgB, diff);
     threshold(diff, binaria, 30, 255, THRESH_BINARY);
     morphologyEx(binaria, binaria, MORPH_CLOSE,
                  getStructuringElement(MORPH_RECT, Size(5, 5)));
 
-    // Contornos y contorno mayor
-    vector<vector<Point>> contornos;
-    findContours(binaria, contornos, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
-    int idxMayor = encontrarContornoMayor(contornos);
-
-    // =========================
-    // EJERCICIO 3 - Silueta brillante (diff) sobre fondo negro
-    // =========================
-
     Mat imagenC3 = Mat::zeros(imgA.size(), imgA.type());
     diff.copyTo(imagenC3, binaria);
+
+    vector<vector<Point>> contornos3;
+    findContours(binaria, contornos3, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+    int idxMayor3 = encontrarContornoMayor(contornos3);
+
     imshow("Ejercicio 3 - Bounding Box y Centro",
-           dibujarBoundingBox(imagenC3, contornos, idxMayor));
+           dibujarBoundingBox(imagenC3, contornos3, idxMayor3));
 
     // =========================
-    // EJERCICIO 4 - Grises originales (imgA) sobre fondo blanco
+    // EJERCICIO 4 - Division aritmetica imgA / imgB
     // =========================
 
-    Mat imagenC4(imgA.size(), imgA.type(), Scalar(255));
-    imgA.copyTo(imagenC4, binaria);
+    Mat imgAf, imgBf, divResult;
+    imgA.convertTo(imgAf, CV_32F);
+    imgB.convertTo(imgBf, CV_32F);
+
+    // +1 para evitar division por cero
+    imgBf += 1.0f;
+
+    // Division: donde imgA < imgB (triceratops oscuro sobre piso claro) → valor pequeño → oscuro
+    //           donde imgA ≈ imgB (piso, otros dinos) → valor ≈ 1 → blanco tras escalar
+    divide(imgAf * 255.0f, imgBf, divResult);
+
+    // Clamp a 255 y convertir a 8 bits
+    min(divResult, 255.0f, divResult);
+
+    Mat imagenC4;
+    divResult.convertTo(imagenC4, CV_8U);
+
+    // Contornos sobre la imagen resultante (umbral bajo porque el triceratops es oscuro)
+    Mat binaria4;
+    threshold(imagenC4, binaria4, 200, 255, THRESH_BINARY_INV);
+    morphologyEx(binaria4, binaria4, MORPH_CLOSE,
+                 getStructuringElement(MORPH_RECT, Size(5, 5)));
+
+    vector<vector<Point>> contornos4;
+    findContours(binaria4, contornos4, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+    int idxMayor4 = encontrarContornoMayor(contornos4);
+
     imshow("Ejercicio 4 - Bounding Box y Centro",
-           dibujarBoundingBox(imagenC4, contornos, idxMayor));
+           dibujarBoundingBox(imagenC4, contornos4, idxMayor4));
 
     waitKey(0);
     return 0;
